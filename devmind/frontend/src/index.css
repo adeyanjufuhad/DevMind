@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F9FAFB;
+    color: #111827;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+/* Custom scrollbars for code panels */
+.code-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.code-scroll::-webkit-scrollbar-track {
+  background: #0D1117;
+}
+.code-scroll::-webkit-scrollbar-thumb {
+  background: #30363D;
+  border-radius: 3px;
+}
+.code-scroll::-webkit-scrollbar-thumb:hover {
+  background: #484F58;
+}
