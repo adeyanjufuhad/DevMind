@@ -16,6 +16,21 @@ from google.genai import types
 logger = logging.getLogger("devmind.gemini_client")
 
 PRIMARY_MODEL = "gemini-3.6-flash"
+RATE_LIMIT_USER_MESSAGE = "Rate limit reached, please try again in a few minutes"
+
+
+def is_rate_limit_error(exc: Exception) -> bool:
+    """Checks if an exception represents an HTTP 429 rate limit or quota exhaustion."""
+    err_str = str(exc).lower()
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    return (
+        code == 429
+        or "429" in err_str
+        or "resource_exhausted" in err_str
+        or "quota exceeded" in err_str
+        or "rate limit" in err_str
+        or "ratelimit" in err_str
+    )
 
 
 def get_gemini_client(api_key: Optional[str] = None) -> genai.Client:

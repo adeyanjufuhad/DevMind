@@ -1,9 +1,14 @@
-"""Stage 5 — Documentation & Inline Annotation using Gemini 2.5 Flash."""
+"""Stage 5 — Documentation & Inline Annotation using Gemini 3.6 Flash."""
 
+import asyncio
 import logging
 from typing import Optional
 from pipeline.schemas import DocResult
-from utils.gemini_client import generate_gemini_json
+from utils.gemini_client import (
+    RATE_LIMIT_USER_MESSAGE,
+    generate_gemini_json,
+    is_rate_limit_error,
+)
 
 logger = logging.getLogger("devmind.documenter")
 
@@ -41,21 +46,33 @@ Respond strictly with a JSON object containing "documented_code".
 async def generate_docs(
     fixed_code: str, language: Optional[str] = None
 ) -> DocResult:
-    """Executes Stage 5: Adds docstrings and inline comments using Gemini 2.5 Flash."""
+    """Executes Stage 5: Adds docstrings and inline comments using Gemini 3.6 Flash."""
     prompt = build_documenter_prompt(fixed_code, language)
-    try:
-        data = await generate_gemini_json(
-            contents=prompt,
-            system_instruction=DOCUMENTER_SYSTEM_PROMPT,
-            model="gemini-3.6-flash",
-            temperature=0.2,
-        )
-        return DocResult(
-            documented_code=data.get("documented_code", fixed_code)
-        )
-    except Exception as exc:
-        logger.error("Stage 5 Documenter failed via google-genai: %s", exc)
-        return DocResult(
-            documented_code=fixed_code,
-            error=str(exc),
-        )
+    for attempt in range(2):
+        try:
+            data = await generate_gemini_json(
+                contents=prompt,
+                system_instruction=DOCUMENTER_SYSTEM_PROMPT,
+                model="gemini-3.6-flash",
+                temperature=0.2,
+            )
+            return DocResult(
+                documented_code=data.get("documented_code", fixed_code)
+            )
+        except Exception as exc:
+            if attempt == 0 and is_rate_limit_error(exc):
+                logger.warning("Stage 5 Documenter hit 429 rate limit. Retrying in 15 seconds...")
+                await asyncio.sleep(15)
+                continue
+
+            logger.error("Stage 5 Documenter failed via google-genai: %s", exc)
+            is_rl = is_rate_limit_error(exc)
+            err_msg = RATE_LIMIT_USER_MESSAGE if is_rl else str(exc)
+            return DocResult(
+                documented_code=fixed_code,
+                error=err_msg,
+            )
+    return DocResult(
+        documented_code=fixed_code,
+        error=RATE_LIMIT_USER_MESSAGE,
+    )
