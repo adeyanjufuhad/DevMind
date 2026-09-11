@@ -1,12 +1,12 @@
-"""Stage 5 — Documentation & Inline Annotation using Gemini 3.6 Flash."""
+"""Stage 5 — Documentation & Inline Annotation using Groq."""
 
 import asyncio
 import logging
 from typing import Optional
 from pipeline.schemas import DocResult
-from utils.gemini_client import (
+from utils.groq_client import (
     RATE_LIMIT_USER_MESSAGE,
-    generate_gemini_json,
+    generate_groq_json,
     is_rate_limit_error,
 )
 
@@ -46,14 +46,14 @@ Respond strictly with a JSON object containing "documented_code".
 async def generate_docs(
     fixed_code: str, language: Optional[str] = None
 ) -> DocResult:
-    """Executes Stage 5: Adds docstrings and inline comments using Gemini 3.6 Flash."""
+    """Executes Stage 5: Adds docstrings and inline comments using Groq."""
     prompt = build_documenter_prompt(fixed_code, language)
     for attempt in range(2):
         try:
-            data = await generate_gemini_json(
-                contents=prompt,
-                system_instruction=DOCUMENTER_SYSTEM_PROMPT,
-                model="gemini-3.6-flash",
+            data = await generate_groq_json(
+                prompt=prompt,
+                system_prompt=DOCUMENTER_SYSTEM_PROMPT,
+                model="llama-3.3-70b-versatile",
                 temperature=0.2,
             )
             return DocResult(
@@ -65,7 +65,7 @@ async def generate_docs(
                 await asyncio.sleep(15)
                 continue
 
-            logger.error("Stage 5 Documenter failed via google-genai: %s", exc)
+            logger.error("Stage 5 Documenter failed via Groq: %s", exc)
             is_rl = is_rate_limit_error(exc)
             err_msg = RATE_LIMIT_USER_MESSAGE if is_rl else str(exc)
             return DocResult(

@@ -4,9 +4,9 @@ const STEPS = [
   { n: 1, title: 'Input Code', text: 'You paste your code and optional language hint.' },
   { n: 2, title: 'CodeBERT Classification', text: 'Classifies the language and problem type.' },
   { n: 3, title: 'StarCoder2 Understanding', text: 'Summarizes what the code is trying to do.' },
-  { n: 4, title: 'Gemini 3.6 Flash Fix & Explanation', text: 'Analyzes context, pinpoints root cause, and applies fix.' },
-  { n: 5, title: 'Gemini 3.6 Flash Unit Tests', text: 'Generates language-idiomatic unit test suites.' },
-  { n: 6, title: 'Gemini 3.6 Flash Documentation', text: 'Enriches code with docstrings and inline comments.' },
+  { n: 4, title: 'Groq Llama 3.3 70B Fix & Explanation', text: 'Analyzes context, pinpoints root cause, and applies fix.' },
+  { n: 5, title: 'Groq Llama 3.3 70B Unit Tests', text: 'Generates language-idiomatic unit test suites.' },
+  { n: 6, title: 'Groq Llama 3.3 70B Documentation', text: 'Enriches code with docstrings and inline comments.' },
   { n: 7, title: 'Complete Results', text: 'Everything streamed directly into the results panel.' },
 ];
 
@@ -38,11 +38,11 @@ export default function HowItWorks() {
               <span className="text-[#9CA3AF]">→</span>
               <span className="px-2.5 py-1 bg-[#EFF6FF] border border-[#BFDBFE] rounded-[4px] text-[#2563EB]">StarCoder2</span>
               <span className="text-[#9CA3AF]">→</span>
-              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Gemini Fix</span>
+              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Groq Fix</span>
               <span className="text-[#9CA3AF]">→</span>
-              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Gemini Tests</span>
+              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Groq Tests</span>
               <span className="text-[#9CA3AF]">→</span>
-              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Gemini Docs</span>
+              <span className="px-2.5 py-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[4px] text-[#16A34A]">Groq Docs</span>
             </div>
           </div>
 

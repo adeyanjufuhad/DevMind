@@ -1,12 +1,12 @@
-"""Stage 3 — Bug Diagnosis, Code Repair & Junior Explanation using Gemini 3.6 Flash."""
+"""Stage 3 — Bug Diagnosis, Code Repair & Junior Explanation using Groq."""
 
 import asyncio
 import logging
 from typing import Optional
 from pipeline.schemas import ClassificationResult, FixResult, SummaryResult
-from utils.gemini_client import (
+from utils.groq_client import (
     RATE_LIMIT_USER_MESSAGE,
-    generate_gemini_json,
+    generate_groq_json,
     is_rate_limit_error,
 )
 
@@ -60,14 +60,14 @@ async def fix_code(
     classification: Optional[ClassificationResult] = None,
     summary: Optional[SummaryResult] = None,
 ) -> FixResult:
-    """Executes Stage 3: Diagnoses the bug and generates a fix using Gemini 3.6 Flash."""
+    """Executes Stage 3: Diagnoses the bug and generates a fix using Groq."""
     prompt = build_fixer_prompt(code, classification, summary)
     for attempt in range(2):
         try:
-            data = await generate_gemini_json(
-                contents=prompt,
-                system_instruction=FIXER_SYSTEM_PROMPT,
-                model="gemini-3.6-flash",
+            data = await generate_groq_json(
+                prompt=prompt,
+                system_prompt=FIXER_SYSTEM_PROMPT,
+                model="llama-3.3-70b-versatile",
                 temperature=0.2,
             )
             return FixResult(
@@ -81,13 +81,13 @@ async def fix_code(
                 await asyncio.sleep(15)
                 continue
 
-            logger.error("Stage 3 Fixer failed via google-genai: %s", exc)
+            logger.error("Stage 3 Fixer failed via Groq: %s", exc)
             is_rl = is_rate_limit_error(exc)
             err_msg = RATE_LIMIT_USER_MESSAGE if is_rl else str(exc)
             return FixResult(
                 root_cause=RATE_LIMIT_USER_MESSAGE if is_rl else "Analysis could not complete due to an error.",
                 fixed_code=code,
-                explanation=RATE_LIMIT_USER_MESSAGE if is_rl else "An error occurred while contacting Gemini API.",
+                explanation=RATE_LIMIT_USER_MESSAGE if is_rl else "An error occurred while contacting Groq API.",
                 error=err_msg,
             )
     return FixResult(

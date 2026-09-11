@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pipeline.fixer import fix_code
 from pipeline.tester import generate_tests
 from pipeline.documenter import generate_docs
-from utils.gemini_client import is_rate_limit_error, RATE_LIMIT_USER_MESSAGE
+from utils.groq_client import is_rate_limit_error, RATE_LIMIT_USER_MESSAGE
 
 
 def test_is_rate_limit_error():
@@ -36,7 +36,7 @@ async def test_fixer_retry_on_429_success():
             raise Exception("429 Resource Exhausted")
         return {"root_cause": "Fixed", "fixed_code": "x = 1", "explanation": "Done"}
 
-    with patch("pipeline.fixer.generate_gemini_json", side_effect=mock_generate), \
+    with patch("pipeline.fixer.generate_groq_json", side_effect=mock_generate), \
          patch("pipeline.fixer.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         res = await fix_code("x = 0")
         assert call_count == 2
@@ -50,7 +50,7 @@ async def test_fixer_retry_on_429_exhausted():
     async def mock_generate(*args, **kwargs):
         raise Exception("429 Resource Exhausted")
 
-    with patch("pipeline.fixer.generate_gemini_json", side_effect=mock_generate), \
+    with patch("pipeline.fixer.generate_groq_json", side_effect=mock_generate), \
          patch("pipeline.fixer.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         res = await fix_code("x = 0")
         mock_sleep.assert_awaited_once_with(15)
@@ -63,7 +63,7 @@ async def test_tester_retry_on_429():
     async def mock_generate(*args, **kwargs):
         raise Exception("RESOURCE_EXHAUSTED")
 
-    with patch("pipeline.tester.generate_gemini_json", side_effect=mock_generate), \
+    with patch("pipeline.tester.generate_groq_json", side_effect=mock_generate), \
          patch("pipeline.tester.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         res = await generate_tests("def add(): pass", "python")
         mock_sleep.assert_awaited_once_with(15)
@@ -75,7 +75,7 @@ async def test_documenter_retry_on_429():
     async def mock_generate(*args, **kwargs):
         raise Exception("Rate limit exceeded 429")
 
-    with patch("pipeline.documenter.generate_gemini_json", side_effect=mock_generate), \
+    with patch("pipeline.documenter.generate_groq_json", side_effect=mock_generate), \
          patch("pipeline.documenter.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         res = await generate_docs("def add(): pass", "python")
         mock_sleep.assert_awaited_once_with(15)

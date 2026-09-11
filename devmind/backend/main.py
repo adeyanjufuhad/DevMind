@@ -24,11 +24,13 @@ logger = logging.getLogger("devmind.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle startup and shutdown logger."""
+    groq_ready = bool(os.environ.get("GROQ_API_KEY"))
     gemini_ready = bool(os.environ.get("GEMINI_API_KEY"))
     anthropic_ready = bool(os.environ.get("ANTHROPIC_API_KEY"))
     hf_ready = hf_client.is_configured()
     logger.info("Starting DevMind Backend Service...")
-    logger.info("Gemini API Key configured (Primary): %s", gemini_ready)
+    logger.info("Groq API Key configured (Primary): %s", groq_ready)
+    logger.info("Gemini API Key configured (Fallback): %s", gemini_ready)
     logger.info("Anthropic API Key configured (Optional): %s", anthropic_ready)
     logger.info("HuggingFace API Key configured: %s", hf_ready)
     yield
@@ -59,6 +61,7 @@ async def health_check():
         "status": "healthy",
         "service": "DevMind Backend",
         "models": {
+            "groq": bool(os.environ.get("GROQ_API_KEY")),
             "gemini": bool(os.environ.get("GEMINI_API_KEY")),
             "anthropic": bool(os.environ.get("ANTHROPIC_API_KEY")),
             "huggingface": hf_client.is_configured(),

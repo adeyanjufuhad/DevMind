@@ -22,7 +22,7 @@ export default function PoweredByBadge() {
 
           <div className="space-y-1.5 text-[11px] text-[#374151]">
             <div>
-              <span className="font-medium text-[#111827]">Gemini 3.6 Flash:</span> fix, tests, docs
+              <span className="font-medium text-[#111827]">Groq (Llama 3.3 70B):</span> fix, tests, docs
             </div>
             <div>
               <span className="font-medium text-[#111827]">CodeBERT:</span> language detection
@@ -49,7 +49,7 @@ export default function PoweredByBadge() {
           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
           className="bg-white border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:border-[#D1D5DB] rounded-[6px] px-2.5 py-1.5 transition-colors cursor-pointer text-[12px]"
         >
-          Built with Gemini + HuggingFace
+          Built with Groq + HuggingFace
         </button>
       )}
     </div>
