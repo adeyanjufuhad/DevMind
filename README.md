@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black" alt="React 18" />
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Gemini-3.6--Flash-4285F4?style=flat&logo=google&logoColor=white" alt="Gemini 3.6 Flash" />
+  <img src="https://img.shields.io/badge/Groq-Llama_3.3_70B-F55036?style=flat&logo=groq&logoColor=white" alt="Groq Llama 3.3 70B" />
   <img src="https://img.shields.io/badge/HuggingFace-Inference_API-FFD21E?style=flat&logo=huggingface&logoColor=black" alt="HuggingFace" />
   <img src="https://img.shields.io/badge/Streaming-SSE-2563EB?style=flat" alt="Server-Sent Events" />
 </p>
@@ -79,17 +79,17 @@ DevMind is designed with a **stateless, zero-retention architecture**. User code
 │ └────────────────────────────┬────────────────────────────┘ │
 │                              ▼                              │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Stage 3: Gemini 3.6 Flash (google-genai SDK)            │ │
+│ │ Stage 3: Groq Llama 3.3 70B (groq SDK)                  │ │
 │ │   Root Cause Diagnosis + Corrected Code + Junior Walk   │ │
 │ └────────────────────────────┬────────────────────────────┘ │
 │                              ▼                              │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Stage 4: Gemini 3.6 Flash (google-genai SDK)            │ │
+│ │ Stage 4: Groq Llama 3.3 70B (groq SDK)                  │ │
 │ │   Framework-Specific Unit Test Suite Synthesis          │ │
 │ └────────────────────────────┬────────────────────────────┘ │
 │                              ▼                              │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Stage 5: Gemini 3.6 Flash (google-genai SDK)            │ │
+│ │ Stage 5: Groq Llama 3.3 70B (groq SDK)                  │ │
 │ │   Production Docstrings, Type Hints & Inline Comments   │ │
 │ └─────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
@@ -101,15 +101,15 @@ DevMind is designed with a **stateless, zero-retention architecture**. User code
 | :--- | :--- | :--- | :--- | :--- |
 | **Stage 1** | `microsoft/codebert-base` | HuggingFace Inference API | Identifies language if unspecified; classifies defect into syntax, logic, performance, or security flaw. | `{ "language": str, "error_type": str, "confidence": float }` |
 | **Stage 2** | `bigcode/starcoder2-15b` | HuggingFace Inference API | Summarizes developer intent; extracts functions, classes, loops, and concurrency patterns. | `{ "summary": str, "key_elements": [str] }` |
-| **Stage 3** | `gemini-3.6-flash` | Google AI Studio (`google-genai`) | Synthesizes root cause analysis, generates full repaired code, and provides junior-developer walkthrough. | `{ "root_cause": str, "fixed_code": str, "explanation": str }` |
-| **Stage 4** | `gemini-3.6-flash` | Google AI Studio (`google-genai`) | Generates executable test suite with assertions and edge cases matching language conventions. | `{ "framework": str, "tests": str }` |
-| **Stage 5** | `gemini-3.6-flash` | Google AI Studio (`google-genai`) | Enriches fixed code with standard docstrings, type annotations, and inline commentary. | `{ "documented_code": str }` |
+| **Stage 3** | `llama-3.3-70b-versatile` | Groq Cloud (`groq` SDK) | Synthesizes root cause analysis, generates full repaired code, and provides junior-developer walkthrough. | `{ "root_cause": str, "fixed_code": str, "explanation": str }` |
+| **Stage 4** | `llama-3.3-70b-versatile` | Groq Cloud (`groq` SDK) | Generates executable test suite with assertions and edge cases matching language conventions. | `{ "framework": str, "tests": str }` |
+| **Stage 5** | `llama-3.3-70b-versatile` | Groq Cloud (`groq` SDK) | Enriches fixed code with standard docstrings, type annotations, and inline commentary. | `{ "documented_code": str }` |
 
 ### Resilience & Fallback Strategy
 
 - **15-Second HuggingFace Timeout**: All HuggingFace Inference API queries are wrapped with strict 15.0s timeouts. If HuggingFace experiences cold starts (503), rate limits (429), or timeouts, Stages 1 and 2 degrade gracefully to robust heuristic analysis.
-- **Gemini Direct Zero-Shot Fallback**: If secondary model context is missing or partial, Gemini 3.6 Flash proceeds with autonomous zero-shot inference so the user workflow is never blocked.
-- **Official `google-genai` SDK**: Native support for the newest Google AI Studio `AQ.` prefix authentication keys (which fail when used via raw REST calls).
+- **Groq 429 Rate-Limit Retry Mechanism**: Stages 3, 4, and 5 automatically catch HTTP 429 and rate-limit exceptions, asynchronously wait 15 seconds (`asyncio.sleep(15)`), and retry once before reporting failure. If exhausted, a user-friendly error message (`"Rate limit reached, please try again in a few minutes"`) is returned to the frontend instead of raw stack traces.
+- **Model Tier Fallback**: If `llama-3.3-70b-versatile` is not enabled on a specific tier, the Groq client gracefully cascades to available reasoning models (e.g. `groq/compound`) to ensure zero pipeline disruption.
 
 ---
 
@@ -121,7 +121,7 @@ DevMind/
 │   ├── architecture.md                    # C4 Model (Context, Container, Component levels)
 │   ├── design.md                          # Google-style system design document
 │   ├── adr/                               # Architecture Decision Records
-│   │   ├── 001-model-selection.md         # ADR: Gemini 3.6 Flash + HuggingFace free tier
+│   │   ├── 001-model-selection.md         # ADR: Groq (Llama 3.3 70B) + HuggingFace free tier
 │   │   └── 002-stateless-pipeline.md      # ADR: Stateless zero-retention architecture
 │   └── assets/
 │       └── logo.png                       # High-resolution DevMind brand logo
@@ -129,25 +129,27 @@ DevMind/
 ├── devmind/
 │   ├── backend/                           # Python FastAPI Asynchronous Service
 │   │   ├── main.py                        # FastAPI entry point, CORS, /health, /analyze SSE
-│   │   ├── requirements.txt               # Backend Python dependencies
-│   │   ├── .env.example                   # Environment variable template
+│   │   ├── requirements.txt               # Backend Python dependencies (includes groq SDK)
+│   │   ├── .env.example                   # Environment variable template (GROQ_API_KEY)
 │   │   ├── pipeline/                      # 5-Stage Pipeline Workers (all <= 150 lines)
 │   │   │   ├── __init__.py
 │   │   │   ├── schemas.py                 # Pydantic v2 data models for all stages & events
 │   │   │   ├── classifier.py              # Stage 1: CodeBERT & syntax scoring
 │   │   │   ├── summarizer.py              # Stage 2: StarCoder2 intent & AST extractor
-│   │   │   ├── fixer.py                   # Stage 3: Gemini 3.6 Flash bug diagnosis & fix
-│   │   │   ├── tester.py                  # Stage 4: Gemini 3.6 Flash test suite generator
-│   │   │   ├── documenter.py              # Stage 5: Gemini 3.6 Flash documentation
+│   │   │   ├── fixer.py                   # Stage 3: Groq bug diagnosis & fix (with 15s 429 retry)
+│   │   │   ├── tester.py                  # Stage 4: Groq test suite generator (with 15s 429 retry)
+│   │   │   ├── documenter.py              # Stage 5: Groq documentation (with 15s 429 retry)
 │   │   │   └── orchestrator.py            # Async generator emitting SSE events (1-5 + done)
 │   │   ├── utils/                         # External AI SDK Client Wrappers
 │   │   │   ├── __init__.py
-│   │   │   ├── gemini_client.py           # Official google-genai client (AQ. keys supported)
+│   │   │   ├── groq_client.py             # Official groq client wrapper with 429 retry helpers
+│   │   │   ├── gemini_client.py           # Gemini client wrapper (optional fallback)
 │   │   │   ├── hf_client.py               # HuggingFace async HTTP client (15s timeout)
 │   │   │   └── anthropic_client.py        # Anthropic Claude client wrapper
 │   │   └── tests/                         # Automated Pytest Suite
 │   │       ├── __init__.py
 │   │       ├── test_schemas.py            # Pydantic schema validation & serialization tests
+│   │       ├── test_retry_mechanism.py    # Unit tests for 429 retry mechanism across Stages 3-5
 │   │       └── test_pipeline_fallback.py  # Language heuristics & fallback resilience tests
 │   │
 │   └── frontend/                          # React 18 + Tailwind CSS Web Application
@@ -199,7 +201,7 @@ DevMind was architected using **`karak-architecture`** principles:
 
 - **Python**: `3.11` or higher
 - **Node.js**: `18.0` or higher (with `npm`)
-- **Google AI Studio API Key**: [Get a free Gemini API key](https://aistudio.google.com/) (supports `AQ.` prefix keys)
+- **Groq API Key**: [Get a free Groq API key](https://console.groq.com/keys)
 - **HuggingFace User Access Token (Optional)**: [Get a free HF Token](https://huggingface.co/settings/tokens)
 
 ---
@@ -226,11 +228,15 @@ cp .env.example .env
 
 Edit `devmind/backend/.env`:
 ```env
-# Required for Stages 3, 4, and 5 (Gemini 3.6 Flash via official google-genai SDK)
-GEMINI_API_KEY=your_gemini_api_key_here
+# Required for Stages 3, 4, and 5 (Groq Llama 3.3 70B Versatile via official groq SDK)
+GROQ_API_KEY=your_groq_api_key_here
 
 # Required for Stages 1 and 2 (HuggingFace Inference API Free tier)
 HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+
+# Optional: Fallback / alternative model keys
+GEMINI_API_KEY=your_gemini_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 # Server host and port
 HOST=0.0.0.0
@@ -356,5 +362,5 @@ DevMind was architected and built with assistance from **`karak-claude-plugin`**
 ---
 
 <p align="center">
-  <sub>DevMind · Built with Google Gemini, HuggingFace, and karak-claude-plugin · MIT License</sub>
+  <sub>DevMind · Built with Groq, HuggingFace, and karak-claude-plugin · MIT License</sub>
 </p>
